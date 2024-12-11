@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Booking</title>
+    <style>
+        /* Centering and styling adjustments */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f9f9f9;
+        }
+
+        .container {
+            text-align: center;
+            background: white;
+            padding: 20px 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            min-width: 320px;
+            max-width: 700px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        /* Form and grid updates */
+        form {
+            display: grid;
+            grid-template-rows: repeat(4, auto);
+            grid-template-columns: 1fr 2fr;
+            gap: 15px 10px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+
+        label {
+            font-size: 14px;
+            text-align: right;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            padding: 8px;
+            width: 100%;
+            max-width: 250px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+
+
+        .checkbox-container {
+            grid-column: span 2;
+            /* Occupy full row in the grid */
+            display: flex;
+            justify-content: center;
+            /* Center horizontally */
+            align-items: center;
+            /* Center vertically */
+            gap: 10px;
+            /* Add spacing between label and checkbox */
+        }
+
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 15px;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            width: 150px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        .vip {
+            color: red;
+            font-weight: bold;
+        }
+
+        .name {
+            cursor: pointer;
+        }
+
+        .name:hover {
+            text-decoration: underline;
+            color: #007BFF;
+        }
+
+        /* Snackbar styling */
+        .snackbar {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            z-index: 1000;
+        }
+
+        .snackbar.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-10px);
+        }
+
+        /* Dialog pop-up styles */
+        .dialog {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            z-index: 1000;
+        }
+
+        .dialog button {
+            margin-top: 10px;
+            padding: 5px 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .dialog button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Restaurant Booking</h1>
+        <form id="booking-form">
+            <label for="name">Name</label>
+            <input type="text" id="name" required>
+            <label for="people">Party Size</label>
+            <input type="number" id="people" required>
+            <label for="remarks">Remarks</label>
+            <input type="text" id="remarks" placeholder="Optional">
+            <div class="checkbox-container">
+                <label for="vip">VIP Booking</label>
+                <input type="checkbox" id="vip">
+            </div>
+            <div class="button-group" style="grid-column: span 2; text-align: center;">
+                <button id="add-to-waitlist" type="submit">Add to Waitlist</button>
+                <button id="process-booking" type="button">Process Booking</button>
+            </div>
+        </form>
+        
+
+        <h2>Waitlist</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Party Size</th>
+                    <th>Remarks</th>
+                </tr>
+            </thead>
+            <tbody id="bookings-list">
+                <tr>
+                    <td colspan="4">No Bookings</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <!-- Snackbar -->
+    <div id="snackbar" class="snackbar"></div>
+
+    <!-- Booking Details Dialog -->
+    <div id="dialog" class="dialog">
+        <p id="dialog-content" style="white-space: pre-wrap;"></p>
+        <div style="display: flex; justify-content: center; gap: 10px;">
+            <button id="close-dialog">Close</button>
+            <button id="cancel-booking">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Confirmation Dialog -->
+    <div id="confirm-dialog" class="dialog">
+        <p>Are you sure you want to cancel this booking?</p>
+        <div class="button-group">
+        <button id="confirm-cancel-ok">Yes</button>
+        <button id="confirm-cancel-close">No</button>
+        </div>
+    </div>
+
+
+    <script>
+        // const API_BASE = 'http://my-restaurant.pages.dev';
+        // const API_BASE = 'https://dda3-136-25-169-117.ngrok-free.app'; 
+        // const API_BASE = 'https://my-290i-prj-443501.wl.r.appspot.com';
+        // const API_BASE = 'http://127.0.0.1:8080';
+
+        function showSnackbar(message) {
+            const snackbar = document.getElementById('snackbar');
+            snackbar.textContent = message;
+            snackbar.classList.add('show');
+            setTimeout(() => {
+                snackbar.classList.remove('show');
+            }, 3000);
+        }
+
+        async function addBooking(event) {
+            event.preventDefault();
+            const name = document.getElementById('name').value.trim();
+            const people = document.getElementById('people').value.trim();
+            const remarks = document.getElementById('remarks').value.trim();
+            const vip = document.getElementById('vip').checked;
+        
+            if (!people || isNaN(people)) {
+                showSnackbar("Please provide a valid party size.");
+                return;
+            }
+        
+            const response = await fetch(`${API_BASE}/add_booking`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, people: parseInt(people, 10), remarks, vip }), // Using "people" as expected by the backend
+            });
+        
+            const data = await response.json();
+            showSnackbar(data.message || data.error);
+        
+            // Clear the form fields
+            document.getElementById('name').value = '';
+            document.getElementById('people').value = '';
+            document.getElementById('remarks').value = '';
+            document.getElementById('vip').checked = false;
+        
+            fetchBookings(); // Refresh the bookings list
+        }
+        
+        async function fetchBookings() {
+            const response = await fetch(`${API_BASE}/view_bookings`);
+            const data = await response.json();
+            const tbody = document.getElementById('bookings-list');
+            tbody.innerHTML = '';
+        
+            if (data.bookings.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4">No Bookings</td></tr>';
+                return;
+            }
+            // 按照 VIP 属性排序，VIP 用户排在前面
+            const sortedBookings = data.bookings.sort((a, b) => (b.vip ? 1 : 0) - (a.vip ? 1 : 0));
+            
+            data.bookings.forEach((booking, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td class="name ${booking.vip ? 'vip' : ''}">${booking.name}</td>
+                    <td>${booking.people !== undefined ? booking.people : 'N/A'}</td> <!-- Display "people" -->
+                    <td>${booking.remarks || ''}</td>
+                `;
+
+                row.querySelector('.name').addEventListener('click', () => showDialog(booking));
+                tbody.appendChild(row);
+            });
+        }    
+
+        function calculateWaitTime(bookingTime) {
+            const now = Date.now() / 1000;
+            const diff = Math.floor(now - bookingTime);
+            const minutes = Math.floor(diff / 60);
+            const seconds = diff % 60;
+            return `${minutes} min ${seconds} sec`;
+        }
+
+        document.getElementById('close-dialog').addEventListener('click', () => {
+            document.getElementById('dialog').style.display = 'none';
+        });
+
+        document.getElementById('cancel-booking').addEventListener('click', () => {
+            document.getElementById('dialog').style.display = 'none';
+            document.getElementById('confirm-dialog').style.display = 'block';
+        });
+
+        document.getElementById('confirm-cancel-close').addEventListener('click', () => {
+            document.getElementById('confirm-dialog').style.display = 'none';
+        });
+
+        let selectedBookingId = null;
+
+        function showDialog(booking) {
+            selectedBookingId = booking.id; // Set the selected booking ID
+            const dialog = document.getElementById('dialog');
+            const dialogContent = document.getElementById('dialog-content');
+            const waitTime = calculateWaitTime(booking.time);
+            dialogContent.textContent = `Booking ID: ${booking.id}\nWaited Time: ${waitTime}\nRemarks: ${booking.remarks || ''}`;
+            dialog.style.display = 'block';
+        }
+
+        document.getElementById('confirm-cancel-ok').addEventListener('click', async () => {
+            if (!selectedBookingId) {
+                showSnackbar("No booking selected for cancellation.");
+                return;
+            }
+            const response = await fetch(`${API_BASE}/cancel_booking`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: selectedBookingId }),
+            });
+            const data = await response.json();
+            showSnackbar(data.message || data.error);
+            if (!data.error) {
+                document.getElementById('confirm-dialog').style.display = 'none';
+                fetchBookings();
+            }
+        });
+
+        async function processBooking() {
+            const response = await fetch(`${API_BASE}/process_booking`, { method: 'POST' });
+            const data = await response.json();
+            showSnackbar(data.message || data.error);
+            fetchBookings();
+        }
+
+        document.getElementById('booking-form').addEventListener('submit', addBooking);
+        document.getElementById('process-booking').addEventListener('click', processBooking);
+
+        fetchBookings();
+    </script>
+</body>
+
+</html>
