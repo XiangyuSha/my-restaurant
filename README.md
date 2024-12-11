@@ -1,5 +1,5 @@
 # my-restaurant
-A web app for restaurant booking management
+This is a web app for restaurant booking management.
 
 Our primary user interface:  
 
