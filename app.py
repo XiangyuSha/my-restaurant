@@ -1,11 +1,9 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from data_structure import QUEUE
-import os
 
-app = Flask(__name__, static_folder='static')
-CORS(app)
-# CORS(app, resources={r"/*": {"origins": "https://my-restaurant.pages.dev"}})
+app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 queue = QUEUE()
 
@@ -44,11 +42,6 @@ def cancel_booking():
     else:
         return jsonify({"error": "Booking ID not found"}), 404
 
-# 提供静态文件作为默认主页
-@app.route('/')
-def home():
-    return send_from_directory(app.static_folder, 'index.html')
-
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
+    app.run(debug=True)
 
